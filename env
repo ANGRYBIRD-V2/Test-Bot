@@ -1,0 +1,8 @@
+APP_ID = "27088123"
+API_HASH = "50dbc67d5ad1732ef82f091ad23b34c8"
+BOT_TOKEN = "8092293011:AAGtzwKA8DiokmufAE2UZf35dKrwSrAML6g"
+DB_URL = "postgresql://neondb_owner:OCzv7QSEi5kd@ep-rapid-fog-a59mgla2.us-east-2.aws.neon.tech/neondb?sslmode=require"
+OWNER_ID = "1916807079"
+ADMINS = 1916807079
+DB_CHANNELS = "-1002388785159"
+KROWN_API_KEY = 679581ca43e44446aa5f0af80714f3cd85dfc875
