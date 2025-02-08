@@ -22,9 +22,7 @@ class Files(BASE):
     mime_type = Column(TEXT)
     caption = Column(TEXT)
 
-    def __init__(
-        self, file_name, file_id, file_ref, file_size, file_type, mime_type, caption
-    ):
+    def __init__(self, file_name, file_id, file_ref, file_size, file_type, mime_type, caption):
         self.file_name = file_name
         self.file_id = file_id
         self.file_ref = file_ref
@@ -67,16 +65,13 @@ async def save_file(media):
     file_id, file_ref = unpack_new_file_id(media.file_id)
     with INSERTION_LOCK:
         try:
-            # Check if file with same file_id exists
             file = SESSION.query(Files).filter_by(file_id=file_id).one()
             LOGGER.warning("%s is already saved in the database", media.file_name)
         except NoResultFound:
             try:
-                # Check if file with same file_name and file_size exists
                 file = SESSION.query(Files).filter_by(file_name=media.file_name, file_size=media.file_size).one()
                 LOGGER.warning("%s with size %s is already saved in the database", media.file_name, media.file_size)
             except NoResultFound:
-                # Create a new file record
                 file = Files(
                     file_name=media.caption if media.caption else media.file_name,
                     file_id=file_id,
@@ -99,10 +94,7 @@ async def save_file(media):
             SESSION.rollback()
             return False
         finally:
-            try:
-                SESSION.close()
-            except Exception as close_error:
-                LOGGER.error(f"Error closing session: {close_error}")
+            SESSION.close()
 
 async def get_filter_results(query, page=1, per_page=10):
     """Get filtered results from the database."""
@@ -191,13 +183,17 @@ async def get_precise_filter_results(query, page=1, per_page=10):
     return [], 0
 
 async def get_file_details(file_id):
-    """Get file details based on file_id."""
+    """Get file details based on file_id and generate a download link."""
     retries = 3
     while retries > 0:
         try:
             with INSERTION_LOCK:
                 file_details = SESSION.query(Files).filter_by(file_id=file_id).all()
-                return file_details
+                if file_details:
+                    # Generate the direct download link
+                    download_link = f"https://yourserver.com/download/{file_id}"
+                    return file_details, download_link
+                return None, None
         except PendingRollbackError:
             SESSION.rollback()
             retries -= 1
@@ -208,13 +204,13 @@ async def get_file_details(file_id):
             retries -= 1
         except Exception as e:
             LOGGER.warning(f"Error occurred while retrieving file details: {e}")
-            return []
+            return None, None
         finally:
             try:
                 SESSION.close()
             except Exception as close_error:
                 LOGGER.error(f"Error closing session: {close_error}")
-    return []
+    return None, None
 
 async def delete_file(media):
     """Delete a file record from the database."""
